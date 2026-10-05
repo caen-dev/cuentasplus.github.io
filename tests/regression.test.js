@@ -739,23 +739,23 @@ transactionTypeLabel('Pago'),
 });
 
 test('CSV serialization quotes delimiters and neutralizes spreadsheet formulas', () => {
-const csv = serializeCSV([
-['Cliente', 'Nota'],
-[
-'=SUM(1,2)',
-'Nombre "especial"; sucursal'
-]
-]);
+  const csv = serializeCSV([
+    ['Cliente', 'Nota'],
+    [
+      '=SUM(1,2)',
+      'Nombre "especial"; sucursal'
+    ]
+  ]);
 
-assert.match(
-csv,
-/^\uFEFF"Cliente";"Nota"/
-);
+  assert.match(
+    csv,
+    /^\uFEFF"Cliente";"Nota"/
+  );
 
-assert.match(
-csv,
-/"'=SUM1,2";"Nombre ""especial""; sucursal"/
-);
+  assert.match(
+    csv,
+    /"'=SUM\(1,2\)";"Nombre ""especial""; sucursal"/
+  );
 });
 
 test('amount formatting and parsing preserve Argentine decimal input as cents', () => {
