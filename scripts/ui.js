@@ -194,7 +194,7 @@ function buildTransactionHistoryTable(transactions) {
     $tbody.append($('<tr>').append(
       $('<td>').text(transaction.date),
       $('<td>').text(transactionTypeLabel(transaction.type)),
-      $('<td>').text(money(transaction.amount)),
+      $('<td>').text(money(transaction.amountCents ?? transaction.amount ?? 0)),
       $('<td>').text(transaction.paymentMethod || '-')
     ));
   });
