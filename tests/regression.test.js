@@ -152,11 +152,87 @@ typeof startApp,
 );
 });
 
+test('loadAllClients migrates legacy money to V2 and persists it', async () => {
+  fakeDatabase.records.set(
+    'Legacy',
+    {
+      name: 'Legacy',
+      balance: 1500.50,
+      transactions: [
+        {
+          type: 'purchase',
+          amount: 100.25,
+          date: '2026-10-05'
+        }
+      ]
+    }
+  );
+
+  const loaded = await loadAllClients();
+
+  assert.equal(loaded.length, 1);
+  assert.equal(loaded[0].balance, 150050);
+  assert.equal(loaded[0].moneyModelVersion, 2);
+  assert.equal(loaded[0].transactions[0].amountCents, 10025);
+  assert.equal(loaded[0].transactions[0].amount, 10025);
+
+  const stored = fakeDatabase.records.get('Legacy');
+
+  assert.equal(stored.balance, 150050);
+  assert.equal(stored.moneyModelVersion, 2);
+  assert.equal(stored.transactions[0].amountCents, 10025);
+});
+
+test('loadAllClients rejects ambiguous money without changing stored data', async () => {
+  const ambiguous = {
+    name: 'Ambiguous',
+    balance: 1500,
+    transactions: []
+  };
+
+  fakeDatabase.records.set(
+    ambiguous.name,
+    structuredClone(ambiguous)
+  );
+
+  await assert.rejects(
+    loadAllClients(),
+    /mezclados/
+  );
+
+  assert.deepEqual(
+    fakeDatabase.records.get(ambiguous.name),
+    ambiguous
+  );
+});
+
+test('saveClient normalizes legacy money before storing', async () => {
+  await saveClient({
+    name: 'Legacy Save',
+    balance: '250,50',
+    transactions: [
+      {
+        type: 'purchase',
+        amount: '10,25',
+        date: '2026-10-05'
+      }
+    ]
+  });
+
+  const stored =
+    fakeDatabase.records.get('Legacy Save');
+
+  assert.equal(stored.balance, 25050);
+  assert.equal(stored.moneyModelVersion, 2);
+  assert.equal(stored.transactions[0].amountCents, 1025);
+  assert.equal(stored.transactions[0].amount, 1025);
+});
 test('client renames replace the old key atomically', async () => {
 const original = {
 name: 'Almacén Norte',
 balance: 4500,
-transactions: []
+transactions: [],
+moneyModelVersion: 2
 };
 
 await saveClient(original);
@@ -194,7 +270,8 @@ test('failed client writes leave stored records unchanged', async () => {
 const original = {
 name: 'Lucía',
 balance: 2000,
-transactions: []
+transactions: [],
+moneyModelVersion: 2
 };
 
 await saveClient(original);
@@ -237,7 +314,8 @@ test('failed backup replacement does not clear existing records', async () => {
 const original = {
 name: 'Ana',
 balance: 1000,
-transactions: []
+transactions: [],
+moneyModelVersion: 2
 };
 
 await saveClient(original);
@@ -249,7 +327,8 @@ replaceAllClients([
 {
 name: 'Nuevo',
 balance: 0,
-transactions: []
+transactions: [],
+moneyModelVersion: 2
 }
 ]),
 /Simulated IndexedDB write failure/
