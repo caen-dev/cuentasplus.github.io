@@ -905,6 +905,39 @@ parseMoneyToNumber('12,345')
 );
 });
 
+test('money guardrail accepts the maximum supported ARS value', () => {
+  assert.equal(
+  parseMoneyToNumber('9.999.999.999,99'),
+  999999999999
+  );
+
+  assert.equal(
+  parseMoneyToNumber('9999999999.99'),
+  999999999999
+  );
+});
+
+test('money guardrail rejects values above the maximum', () => {
+  assert.ok(
+  Number.isNaN(
+  parseMoneyToNumber('10.000.000.000,00')
+  )
+  );
+
+  assert.ok(
+  Number.isNaN(
+  parseMoneyToNumber('10000000000')
+  )
+  );
+});
+
+test('money parser continues rejecting negative values', () => {
+  assert.ok(
+  Number.isNaN(
+  parseMoneyToNumber('-1')
+  )
+  );
+});
 test('date parsing rejects invalid day/month values', () => {
 assert.equal(
 parseLocalDate(
