@@ -39,6 +39,10 @@ const CURRENCY_CONFIG = {
 
 const DEFAULT_CURRENCY = 'ARS';
 
+// Maximum monetary value accepted by the application.
+// ARS 9.999.999.999,99 = 999.999.999.999 cents.
+export const MAX_MONEY_CENTS = 999999999999;
+
 // =====================================================================
 // PARSING: String → Integer Cents
 // =====================================================================
@@ -73,36 +77,37 @@ export function parseMoneyToCents(value) {
     return NaN;
   }
 
-  // Pattern 1: Dot as decimal (US/UK format): "1.50" or "1000.99"
-  const dotDecimalPattern = /^\d+\.\d{1,2}$/;
-  if (dotDecimalPattern.test(str)) {
-    const number = Number(str);
+  const toCents = (number) => {
     if (!Number.isFinite(number) || number < 0) {
       return NaN;
     }
-    return Math.round(number * 100);
+
+    const cents = Math.round(number * 100);
+
+    if (!Number.isSafeInteger(cents) || cents > MAX_MONEY_CENTS) {
+      return NaN;
+    }
+
+    return cents;
+  };
+
+  // Pattern 1: Dot as decimal (US/UK format): "1.50" or "1000.99"
+  const dotDecimalPattern = /^\d+\.\d{1,2}$/;
+  if (dotDecimalPattern.test(str)) {
+    return toCents(Number(str));
   }
 
   // Pattern 2: Comma as decimal, dots as thousands (European format): "1.000,99"
   const commaDecimalPattern = /^(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d{1,2})?$/;
   if (commaDecimalPattern.test(str)) {
     const normalized = str.replace(/\./g, '').replace(',', '.');
-    const number = Number(normalized);
-    if (!Number.isFinite(number) || number < 0) {
-      return NaN;
-    }
-    return Math.round(number * 100);
+    return toCents(Number(normalized));
   }
 
   // Pattern 3: Plain integer: "150" or "1000"
   const integerPattern = /^\d+$/;
   if (integerPattern.test(str)) {
-    const number = Number(str);
-    if (!Number.isFinite(number) || number < 0) {
-      return NaN;
-    }
-    // Treat as whole currency units, not cents
-    return Math.round(number * 100);
+    return toCents(Number(str));
   }
 
   // Invalid format
