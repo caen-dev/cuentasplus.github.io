@@ -92,7 +92,20 @@ export function detectMoneyModel(client) {
   );
 
   if (!hasAmountCents && !hasLegacyAmount) {
-    return 'legacy';
+    const numericBalance = Number(client.balance);
+
+    // Un cliente nuevo/válido sin movimientos tiene saldo cero.
+    // Un saldo positivo sin movimientos no permite saber si está
+    // expresado en pesos legacy o en centavos: no se debe adivinar.
+    if (
+      transactions.length === 0 &&
+      Number.isFinite(numericBalance) &&
+      numericBalance === 0
+    ) {
+      return 'cents';
+    }
+
+    return 'ambiguous';
   }
 
   if (hasAmountCents && hasLegacyAmount) {

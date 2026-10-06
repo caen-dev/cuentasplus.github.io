@@ -182,13 +182,48 @@ test('partially migrated transaction without amountCents is rejected', () => {
   );
 });
 
+test('empty client with zero balance is safely treated as cents', () => {
+  assert.equal(
+    detectMoneyModel({
+      name: 'Ana',
+      balance: 0,
+      transactions: []
+    }),
+    'cents'
+  );
+});
+
+test('positive balance without transactions is ambiguous', () => {
+  assert.equal(
+    detectMoneyModel({
+      name: 'Ana',
+      balance: 1500,
+      transactions: []
+    }),
+    'ambiguous'
+  );
+
+  assert.throws(
+    () =>
+      normalizeClientMoney({
+        name: 'Ana',
+        balance: 1500,
+        transactions: []
+      }),
+    /mezclados/
+  );
+});
 test('invalid negative legacy monetary value is rejected', () => {
   assert.throws(
     () =>
       normalizeClientMoney({
         name: 'Ana',
-        balance: -12.5,
-        transactions: []
+        balance: 0,
+        transactions: [
+          {
+            amount: -12.5
+          }
+        ]
       }),
     /no es válido/
   );
