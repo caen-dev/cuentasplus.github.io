@@ -353,10 +353,16 @@ loaded[0].balance,
 );
 });
 
-test('backup validation normalizes legacy transaction labels', () => {
+test('backup validation normalizes transaction labels', () => {
 const backup = {
 format: 'cuentasplus-backup',
-version: 1,
+version: 2,
+moneyModelVersion: 2,
+money: {
+currency: 'ARS',
+unit: 'cent',
+decimals: 2
+},
 business: {
 name: 'Almacén',
 phone: '',
@@ -365,11 +371,11 @@ address: ''
 clients: [
 {
 name: ' Ana ',
-balance: '12.5',
+balanceCents: 1250,
 transactions: [
 {
 type: 'Compra',
-amount: '12.5',
+amountCents: 1250,
 date: '28/09/2026'
 }
 ]
@@ -397,7 +403,7 @@ result.clients[0].name,
 
 // 12.5 pesos = 1250 centavos.
 assert.equal(
-result.clients[0].balance,
+result.clients[0].balanceCents,
 1250
 );
 
@@ -420,7 +426,13 @@ result.clients[0].transactions[0].amount,
 test('backup validation rejects duplicate clients and malformed transactions', () => {
 const base = {
 format: 'cuentasplus-backup',
-version: 1,
+version: 2,
+moneyModelVersion: 2,
+money: {
+currency: 'ARS',
+unit: 'cent',
+decimals: 2
+},
 business: {
 name: '',
 phone: '',
@@ -431,7 +443,7 @@ clients: []
 
 const client = {
 name: 'Ana',
-balance: 0,
+balanceCents: 0,
 transactions: []
 };
 
@@ -457,14 +469,14 @@ clients: [
 transactions: [
 {
 type: 'hack',
-amount: 1,
+amountCents: 1,
 date: 'hoy'
 }
 ]
 }
 ]
 }),
-/transacción.*tipo inválido/
+/tipo invalido/
 );
 });
 
