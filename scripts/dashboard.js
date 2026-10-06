@@ -86,7 +86,7 @@ function modalPayments(styleClass) {
         .sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date))
         .slice(0, 20)
         .map(p =>
-          `<tr><td>${escapeHtml(p.date)}</td><td>${escapeHtml(p.cliente)}</td><td>${money(p.amount)}</td><td>${escapeHtml(p.paymentMethod)}</td></tr>`
+          `<tr><td>${escapeHtml(p.date)}</td><td>${escapeHtml(p.cliente)}</td><td>${money(p.amountCents ?? p.amount ?? 0)}</td><td>${escapeHtml(p.paymentMethod)}</td></tr>`
         ).join('')
     : `<tr><td colspan="4" class="text-muted">Sin pagos este mes</td></tr>`;
 
@@ -157,7 +157,7 @@ function computeStats() {
       const d = parseLocalDate(t.date);
       if (!d) return;
       if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) {
-        monthPayments += Number(t.amount) || 0;
+        monthPayments += Number(t.amountCents ?? t.amount ?? 0) || 0;
       }
     });
   });
