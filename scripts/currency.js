@@ -278,20 +278,32 @@ export function multiplyCents(cents, scalar) {
 }
 
 /**
- * Ensures a value is valid cents (integer, non-negative, finite).
+ * Ensures a value is valid internal cents.
+ *
+ * A valid monetary value must be:
+ * - a number
+ * - a safe integer
+ * - non-negative
+ * - within the application monetary limit
  *
  * @param {number} cents - Value to validate
  * @returns {boolean} True if valid cents
  *
- * Example:
- *   isValidCents(150)   → true
- *   isValidCents(-10)   → false
- *   isValidCents(NaN)   → false
- *   isValidCents(15.5)  → true (rounds to 16)
+ * Examples:
+ *   isValidCents(150)                 ? true
+ *   isValidCents(-10)                 ? false
+ *   isValidCents(NaN)                 ? false
+ *   isValidCents(15.5)                ? false
+ *   isValidCents(MAX_MONEY_CENTS)     ? true
+ *   isValidCents(MAX_MONEY_CENTS + 1) ? false
  */
 export function isValidCents(cents) {
-  const rounded = Math.round(cents);
-  return Number.isFinite(rounded) && rounded >= 0;
+  return (
+    typeof cents === 'number' &&
+    Number.isSafeInteger(cents) &&
+    cents >= 0 &&
+    cents <= MAX_MONEY_CENTS
+  );
 }
 
 /**

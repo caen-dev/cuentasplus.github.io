@@ -133,6 +133,11 @@ parseMoneyToNumber
 } = await import('../scripts/utils.js');
 
 const {
+MAX_MONEY_CENTS,
+isValidCents
+} = await import('../scripts/currency.js');
+
+const {
 startApp
 } = await import('../scripts/app.js');
 
@@ -929,6 +934,48 @@ test('money guardrail rejects values above the maximum', () => {
   parseMoneyToNumber('10000000000')
   )
   );
+});
+
+test('isValidCents accepts only safe integer values within the monetary limit', () => {
+assert.equal(
+isValidCents(0),
+true
+);
+
+assert.equal(
+isValidCents(MAX_MONEY_CENTS),
+true
+);
+
+assert.equal(
+isValidCents(MAX_MONEY_CENTS + 1),
+false
+);
+
+assert.equal(
+isValidCents(15.5),
+false
+);
+
+assert.equal(
+isValidCents(-1),
+false
+);
+
+assert.equal(
+isValidCents(Number.NaN),
+false
+);
+
+assert.equal(
+isValidCents(Number.POSITIVE_INFINITY),
+false
+);
+
+assert.equal(
+isValidCents(Number.MAX_SAFE_INTEGER + 1),
+false
+);
 });
 
 test('money parser continues rejecting negative values', () => {

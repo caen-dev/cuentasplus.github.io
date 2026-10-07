@@ -1,5 +1,7 @@
 'use strict';
 
+import { isValidCents } from './currency.js';
+
 /**
  * BACKUP.JS
  *
@@ -416,19 +418,15 @@ function normalizeV2Backup(data) {
  * Valida un monto V2 expresado explícitamente en centavos.
  */
 function validateIntegerCents(value, fieldName, mustBePositive) {
-  if (
-    typeof value !== 'number' ||
-    !Number.isFinite(value) ||
-    !Number.isInteger(value)
-  ) {
+  if (!isValidCents(value)) {
     throw new Error(
-      `El ${fieldName} debe ser un numero entero de centavos.`
+      `El ${fieldName} debe ser un numero entero de centavos dentro del rango monetario permitido.`
     );
   }
 
-  if (value < 0 || (mustBePositive && value <= 0)) {
+  if (mustBePositive && value <= 0) {
     throw new Error(
-      `El ${fieldName} debe ser ${mustBePositive ? 'mayor que cero' : 'mayor o igual que cero'}.`
+      `El ${fieldName} debe ser mayor que cero.`
     );
   }
 
@@ -461,9 +459,9 @@ function convertLegacyMoney(value, unit, fieldName) {
 
   if (unit === 'centavos') {
     if (typeof value === 'number') {
-      if (!Number.isFinite(value) || !Number.isInteger(value) || value < 0) {
+      if (!isValidCents(value)) {
         throw new Error(
-          `El ${fieldName} debe ser un numero entero de centavos.`
+          `El ${fieldName} debe ser un numero entero de centavos dentro del rango monetario permitido.`
         );
       }
 
@@ -484,8 +482,10 @@ function convertLegacyMoney(value, unit, fieldName) {
 
     const cents = Number(text);
 
-    if (!Number.isSafeInteger(cents)) {
-      throw new Error(`El ${fieldName} excede el rango monetario seguro.`);
+    if (!isValidCents(cents)) {
+      throw new Error(
+        `El ${fieldName} debe ser un numero entero de centavos dentro del rango monetario permitido.`
+      );
     }
 
     return cents;
@@ -499,11 +499,15 @@ function convertLegacyMoney(value, unit, fieldName) {
         throw new Error(`El ${fieldName} no contiene un valor monetario valido.`);
       }
 
-      if (!Number.isSafeInteger(Math.round(value * 100))) {
-        throw new Error(`El ${fieldName} excede el rango monetario seguro.`);
+      const cents = Math.round(value * 100);
+
+      if (!isValidCents(cents)) {
+        throw new Error(
+          `El ${fieldName} excede el rango monetario permitido.`
+        );
       }
 
-      return Math.round(value * 100);
+      return cents;
     }
 
     if (typeof value !== 'string') {
@@ -546,8 +550,10 @@ function convertLegacyMoney(value, unit, fieldName) {
 
     const cents = Math.round(pesos * 100);
 
-    if (!Number.isSafeInteger(cents)) {
-      throw new Error(`El ${fieldName} excede el rango monetario seguro.`);
+    if (!isValidCents(cents)) {
+      throw new Error(
+        `El ${fieldName} excede el rango monetario permitido.`
+      );
     }
 
     return cents;
