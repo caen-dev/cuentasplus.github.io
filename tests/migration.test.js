@@ -49,6 +49,8 @@ clear() {
 class FakeDatabase {
 version = 2;
 
+upgradeHistory = [];
+
 stores = new Map([
   ['clientsStore', new Map()],
   ['metadata', new Map()],
@@ -66,6 +68,20 @@ failNextWrite = false;
 objectStoreNames = {
   contains: (name) => this.stores.has(name)
 };
+
+createObjectStore(name, options = {}) {
+  if (this.stores.has(name)) {
+    throw new Error(`Object store already exists: ${name}`);
+  }
+
+  this.stores.set(name, new Map());
+  this.storeKeyPaths.set(name, options.keyPath);
+
+  return {
+    name,
+    keyPath: options.keyPath
+  };
+}
 
 transaction(storeName, mode) {
   if (!this.stores.has(storeName)) {
@@ -170,6 +186,11 @@ globalThis.indexedDB = {
       if (version > oldVersion) {
         fakeDatabase.version = version;
 
+        fakeDatabase.upgradeHistory.push({
+          oldVersion,
+          newVersion: version
+        });
+
         request.onupgradeneeded?.({
           target: request,
           oldVersion
@@ -195,8 +216,64 @@ for (const store of fakeDatabase.stores.values()) {
   store.clear();
 }
 fakeDatabase.failNextWrite = false;
+fakeDatabase.upgradeHistory = [];
 });
 
+test('IndexedDB V1 upgrades to V2 without losing existing clients', async () => {
+  fakeDatabase.version = 1;
+  fakeDatabase.stores = new Map([
+    ['clientsStore', new Map([
+      [
+        'Ana',
+        {
+          name: 'Ana',
+          balance: 15000,
+          transactions: [
+            {
+              type: 'Compra',
+              amount: 15000,
+              date: '2026-09-28'
+            }
+          ]
+        }
+      ]
+    ])]
+  ]);
+
+  await initDB();
+
+  assert.equal(fakeDatabase.version, 2);
+
+  assert.deepEqual(
+    fakeDatabase.upgradeHistory.at(-1),
+    {
+      oldVersion: 1,
+      newVersion: 2
+    }
+  );
+
+  assert.ok(
+    fakeDatabase.stores.has('clientsStore')
+  );
+
+  assert.ok(
+    fakeDatabase.stores.has('metadata')
+  );
+
+  assert.ok(
+    fakeDatabase.stores.has('syncQueue')
+  );
+
+  const clients =
+    fakeDatabase.stores.get('clientsStore');
+
+  assert.ok(clients.has('Ana'));
+
+  assert.equal(
+    clients.get('Ana').name,
+    'Ana'
+  );
+});
 test('generateUUID creates a valid v4 UUID', () => {
 const id = generateUUID();
 
@@ -259,6 +336,26 @@ ana.businessId
 );
 });
 
+test('existing businessId is preserved during normalization', () => {
+const client =
+ensureClientUUIDs(
+{ name: 'Ana', businessId: 'business-original' },
+MIGRATION_TS
+);
+
+const transaction =
+ensureTransactionUUIDs(
+{
+date: '2026-09-28',
+businessId: 'business-original'
+},
+client.id,
+MIGRATION_TS
+);
+
+assert.equal(client.businessId, 'business-original');
+assert.equal(transaction.businessId, 'business-original');
+});
 test('createdAt is generated only when missing', () => {
 const generated =
 ensureClientUUIDs(

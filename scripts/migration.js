@@ -150,7 +150,9 @@ if (!normalized.id) {
 normalized.id = generateUUID();
 }
 
-normalized.businessId = getOrCreateBusinessId();
+if (!normalized.businessId) {
+  normalized.businessId = getOrCreateBusinessId();
+}
 
 if (!normalized.createdAt) {
 normalized.createdAt = migrationTimestamp;
@@ -199,7 +201,9 @@ normalized.id = generateUUID();
 }
 
 normalized.clientId = clientId;
-normalized.businessId = getOrCreateBusinessId();
+if (!normalized.businessId) {
+  normalized.businessId = getOrCreateBusinessId();
+}
 
 if (!normalized.occurredAt && normalized.date) {
 normalized.occurredAt = normalized.date;
