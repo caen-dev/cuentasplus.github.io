@@ -5,7 +5,13 @@ import { saveClient } from './db.js?v=20260928-8';
 import { updateClientDebtList, updateClientSelect } from './ui.js?v=20260928-18';
 import { updateStats } from './dashboard.js?v=20260928-15';
 import { todayStr, isEmpty, formatMoneyLive } from './utils.js?v=20260928-8';
-import { parseMoneyToCents, formatMoneyFromCents } from './currency.js';
+import {
+  MAX_MONEY_CENTS,
+  parseMoneyToCents,
+  formatMoneyFromCents,
+  addCents,
+  subtractCents
+} from './currency.js';
 import * as uiAlerts from './uiAlerts.js?v=20260928-18';
 
 export function initTransactions() {
@@ -66,8 +72,12 @@ async function handleTransaction(clientName, type, amountCents, paymentMethod) {
   let balanceCents = Number(c.balance) || 0;
 
   if (type === 'purchase') {
-    const updatedBalance = balanceCents + amountCents;
-    if (!Number.isFinite(updatedBalance)) {
+    const updatedBalance = addCents(balanceCents, amountCents);
+    if (
+      !Number.isSafeInteger(updatedBalance) ||
+      updatedBalance < 0 ||
+      updatedBalance > MAX_MONEY_CENTS
+    ) {
       uiAlerts.error('Monto inválido', 'El total de la deuda supera el límite permitido.');
       return false;
     }
@@ -97,7 +107,7 @@ async function handleTransaction(clientName, type, amountCents, paymentMethod) {
       date,
       paymentMethod
     };
-    balanceCents = Math.max(0, balanceCents - amountCents);
+    balanceCents = subtractCents(balanceCents, amountCents);
   } else {
     uiAlerts.error('Tipo inválido', 'Tipo de transacción desconocido.');
     return false;

@@ -346,6 +346,117 @@ test('backup V1 sin unidad explícita es rechazado', () => {
   );
 });
 
+test('backup V1 en pesos acepta el máximo monetario permitido', () => {
+  const backup = {
+    format: 'cuentasplus-backup',
+    version: 1,
+    business: {
+      name: 'Almacén',
+      phone: '123',
+      address: 'Calle 1'
+    },
+    clients: [{
+      name: 'Ana',
+      balance: 9999999999.99,
+      transactions: [{
+        type: 'Compra',
+        amount: 9999999999.99,
+        date: '06/10/2026',
+        paymentMethod: 'efectivo'
+      }]
+    }]
+  };
+
+  const migrated = migrateBackupV1(backup, 'pesos');
+
+  assert.equal(
+    migrated.clients[0].balanceCents,
+    999999999999
+  );
+
+  assert.equal(
+    migrated.clients[0].transactions[0].amountCents,
+    999999999999
+  );
+});
+
+test('backup V1 en centavos acepta el máximo monetario permitido', () => {
+  const backup = {
+    format: 'cuentasplus-backup',
+    version: 1,
+    business: {
+      name: 'Almacén',
+      phone: '123',
+      address: 'Calle 1'
+    },
+    clients: [{
+      name: 'Ana',
+      balance: 999999999999,
+      transactions: [{
+        type: 'Compra',
+        amount: 999999999999,
+        date: '06/10/2026',
+        paymentMethod: 'efectivo'
+      }]
+    }]
+  };
+
+  const migrated = migrateBackupV1(backup, 'centavos');
+
+  assert.equal(
+    migrated.clients[0].balanceCents,
+    999999999999
+  );
+
+  assert.equal(
+    migrated.clients[0].transactions[0].amountCents,
+    999999999999
+  );
+});
+
+test('backup V1 en pesos rechaza valores por encima del máximo monetario', () => {
+  const backup = {
+    format: 'cuentasplus-backup',
+    version: 1,
+    business: {
+      name: 'Almacén',
+      phone: '123',
+      address: 'Calle 1'
+    },
+    clients: [{
+      name: 'Ana',
+      balance: 10000000000,
+      transactions: []
+    }]
+  };
+
+  assert.throws(
+    () => migrateBackupV1(backup, 'pesos'),
+    /rango monetario|valor monetario|inv[aá]lido/i
+  );
+});
+
+test('backup V1 en centavos rechaza valores por encima del máximo monetario', () => {
+  const backup = {
+    format: 'cuentasplus-backup',
+    version: 1,
+    business: {
+      name: 'Almacén',
+      phone: '123',
+      address: 'Calle 1'
+    },
+    clients: [{
+      name: 'Ana',
+      balance: 1000000000000,
+      transactions: []
+    }]
+  };
+
+  assert.throws(
+    () => migrateBackupV1(backup, 'centavos'),
+    /rango monetario|valor monetario|inv[aá]lido/i
+  );
+});
 test('backup V1 con unidad inválida es rechazado', () => {
   const backup = {
     format: 'cuentasplus-backup',

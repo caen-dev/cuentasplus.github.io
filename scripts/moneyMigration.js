@@ -1,15 +1,8 @@
 'use strict';
 
-import { parseMoneyToCents } from './currency.js';
+import { isValidCents, parseMoneyToCents } from './currency.js';
 
 export const MONEY_MODEL_VERSION = 2;
-
-/**
- * El modelo monetario V2 usa exclusivamente enteros de centavos.
- */
-export function isValidCents(value) {
-  return Number.isSafeInteger(value) && value >= 0;
-}
 
 function hasOwn(object, property) {
   return Object.prototype.hasOwnProperty.call(object, property);
