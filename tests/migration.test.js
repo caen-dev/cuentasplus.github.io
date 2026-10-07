@@ -47,7 +47,7 @@ clear() {
 }
 
 class FakeDatabase {
-version = 1;
+version = 2;
 
 stores = new Map([
   ['clientsStore', new Map()],
