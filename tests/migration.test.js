@@ -47,77 +47,105 @@ clear() {
 }
 
 class FakeDatabase {
-records = new Map();
+version = 1;
+
+stores = new Map([
+  ['clientsStore', new Map()],
+  ['metadata', new Map()],
+  ['syncQueue', new Map()]
+]);
+
+storeKeyPaths = new Map([
+  ['clientsStore', 'name'],
+  ['metadata', 'key'],
+  ['syncQueue', 'id']
+]);
+
 failNextWrite = false;
 
 objectStoreNames = {
-contains: () => true
+  contains: (name) => this.stores.has(name)
 };
 
-transaction(_storeName, mode) {
-const stagedRecords = new Map(this.records);
+transaction(storeName, mode) {
+  if (!this.stores.has(storeName)) {
+    throw new Error(`Unknown object store: ${storeName}`);
+  }
 
-const store = {
-  put: (client) => {
-    stagedRecords.set(
-      client.name,
-      structuredClone(client)
-    );
-  },
+  const records = this.stores.get(storeName);
+  const stagedRecords = new Map(records);
 
-  delete: (name) => {
-    stagedRecords.delete(name);
-  },
+  const store = {
+    put: (record) => {
+      const key =
+        storeName === 'clientsStore'
+          ? record.name
+          : storeName === 'metadata'
+            ? record.key
+            : record.id;
 
-  clear: () => {
-    stagedRecords.clear();
-  },
+      stagedRecords.set(
+        key,
+        structuredClone(record)
+      );
+    },
 
-  getAll: () => {
-    const request = {};
+    delete: (key) => {
+      stagedRecords.delete(key);
+    },
+
+    clear: () => {
+      stagedRecords.clear();
+    },
+
+    getAll: () => {
+      const request = {};
+
+      queueMicrotask(() => {
+        request.result = [
+          ...stagedRecords.values()
+        ].map((record) => structuredClone(record));
+
+        request.onsuccess?.();
+      });
+
+      return request;
+    }
+  };
+
+  const transaction = {
+    error: null,
+    objectStore: () => store
+  };
+
+  if (mode === 'readwrite') {
+    const shouldFail = this.failNextWrite;
+    this.failNextWrite = false;
 
     queueMicrotask(() => {
-      request.result = [
-        ...stagedRecords.values()
-      ].map((client) => structuredClone(client));
+      if (shouldFail) {
+        transaction.error =
+          new Error('Simulated IndexedDB write failure');
 
-      request.onsuccess?.();
+        transaction.onerror?.();
+        transaction.onabort?.();
+        return;
+      }
+
+      this.stores.set(
+        storeName,
+        stagedRecords
+      );
+
+      transaction.oncomplete?.();
     });
-
-    return request;
+  } else {
+    queueMicrotask(() => {
+      transaction.oncomplete?.();
+    });
   }
-};
 
-const transaction = {
-  error: null,
-  objectStore: () => store
-};
-
-if (mode === 'readwrite') {
-  const shouldFail = this.failNextWrite;
-  this.failNextWrite = false;
-
-  queueMicrotask(() => {
-    if (shouldFail) {
-      transaction.error =
-        new Error('Simulated IndexedDB write failure');
-
-      transaction.onerror?.();
-      transaction.onabort?.();
-      return;
-    }
-
-    this.records = stagedRecords;
-    transaction.oncomplete?.();
-  });
-} else {
-  queueMicrotask(() => {
-    transaction.oncomplete?.();
-  });
-}
-
-return transaction;
-
+  return transaction;
 }
 }
 
@@ -131,17 +159,30 @@ globalThis.localStorage =
 globalThis.window.localStorage;
 
 globalThis.indexedDB = {
-open: () => {
-const request = {};
+  open: (_name, version) => {
+    const request = {
+      result: fakeDatabase
+    };
 
-queueMicrotask(() => {
-  request.result = fakeDatabase;
-  request.onsuccess?.({ target: request });
-});
+    queueMicrotask(() => {
+      const oldVersion = fakeDatabase.version;
 
-return request;
+      if (version > oldVersion) {
+        fakeDatabase.version = version;
 
-}
+        request.onupgradeneeded?.({
+          target: request,
+          oldVersion
+        });
+      }
+
+      request.onsuccess?.({
+        target: request
+      });
+    });
+
+    return request;
+  }
 };
 
 before(async () => {
@@ -150,7 +191,9 @@ await initDB();
 
 beforeEach(() => {
 globalThis.localStorage.clear();
-fakeDatabase.records.clear();
+for (const store of fakeDatabase.stores.values()) {
+  store.clear();
+}
 fakeDatabase.failNextWrite = false;
 });
 

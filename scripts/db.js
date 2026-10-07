@@ -4,10 +4,10 @@
  * DB.JS — IndexedDB Layer
  *
  * CONTRACT:
- * - Keep DB version = 1
- * - Keep keyPath = name
+ * - DB version = 2
+ * - Keep clientsStore keyPath = name
  * - Keep clients[name] as the in-memory access pattern
- * - Identity migration adds UUID + metadata without changing schema version
+ * - V2 adds metadata and syncQueue stores
  * - Money migration normalizes records to monetary model V2
  * - Ambiguous monetary records are rejected and never written automatically
  */
@@ -27,13 +27,21 @@ const STORE = 'clientsStore';
 
 export function initDB() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1);
+    const request = indexedDB.open(DB_NAME, 2);
 
     request.onupgradeneeded = (e) => {
       db = e.target.result;
 
       if (!db.objectStoreNames.contains(STORE)) {
         db.createObjectStore(STORE, { keyPath: 'name' });
+      }
+
+      if (!db.objectStoreNames.contains('metadata')) {
+        db.createObjectStore('metadata', { keyPath: 'key' });
+      }
+
+      if (!db.objectStoreNames.contains('syncQueue')) {
+        db.createObjectStore('syncQueue', { keyPath: 'id' });
       }
     };
 
