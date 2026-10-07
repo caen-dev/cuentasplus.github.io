@@ -69,18 +69,37 @@ export function updateClientDebtList() {
     if (address) $contact.append($('<span>').text(address));
 
     const movementLabel = `${transactions.length} ${transactions.length === 1 ? 'movimiento' : 'movimientos'}`;
-    const $movement = $('<div>').addClass('client-movement')
-      .append($('<strong>').text(movementLabel));
-    $movement.append($('<span>').text(latestTransaction ? `Último: ${latestTransaction.date}` : 'Sin actividad'));
+    const $movement = $('<div>')
+      .addClass('client-movement')
+      .append(
+        $('<strong>')
+          .addClass('movement-count')
+          .text(movementLabel),
+        $('<span>')
+          .addClass('movement-date')
+          .append(
+            $('<i>')
+              .addClass('fas fa-clock')
+              .attr('aria-hidden', 'true'),
+            document.createTextNode(
+              latestTransaction ? `Último: ${latestTransaction.date}` : 'Sin actividad'
+            )
+          )
+      );
 
     const balance = Number(c.balance) || 0;
     const $balance = $('<td>').addClass(balance > 0 ? 'client-balance has-debt' : 'client-balance')
       .text(money(balance));
 
-    const $clientName = $('<div>').addClass('client-name-line')
-      .append($('<strong>').text(c.name), $btns);
+    const $clientName = $('<div>')
+      .addClass('client-name-line')
+      .append(
+        $('<strong>').text(c.name),
+        $btns
+      );
+
     const $row = $('<tr>').append(
-      $('<td>').addClass('client-name-cell').append($clientName, $contact),
+      $('<td>').addClass('client-name-cell').append($clientName),
       $('<td>').append($movement),
       $balance
     );
