@@ -122,10 +122,10 @@ function normalizeClientForRead(client) {
   return normalized;
 }
 
-export function saveClient(client, previousName = null) {
+export async function saveClient(client, previousName = null) {
   const normalized = normalizeClientForWrite(client);
 
-  return runTransaction('readwrite', (store) => {
+  await runTransaction('readwrite', (store) => {
     if (
       previousName &&
       previousName !== normalized.name
@@ -135,8 +135,9 @@ export function saveClient(client, previousName = null) {
 
     store.put(normalized);
   });
-}
 
+  return normalized;
+}
 export function deleteClientByName(name) {
   return runTransaction(
     'readwrite',
@@ -255,3 +256,4 @@ function runTransaction(mode, operation) {
       );
   });
 }
+

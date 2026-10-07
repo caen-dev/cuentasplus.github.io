@@ -573,3 +573,19 @@ normalizedAfterLoad.createdAt,
 normalizedBeforeSave.createdAt
 );
 });
+
+test('saveClient returns the normalized client that was persisted', async () => {
+const legacyClient = {
+name: 'Carlos',
+balance: 0,
+transactions: []
+};
+
+const saved = await saveClient(legacyClient);
+
+assert.ok(saved);
+assert.match(saved.id, UUID_RE);
+assert.ok(saved.businessId);
+assert.ok(saved.createdAt);
+assert.ok(saved.updatedAt);
+});
