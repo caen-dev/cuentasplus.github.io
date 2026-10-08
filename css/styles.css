@@ -404,7 +404,43 @@ label {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
   outline: none;
 }
-.form-control::placeholder { color: var(--muted); opacity: .82; }
+.form-control,
+.form-control:focus,
+.form-control:active,
+.form-control:disabled,
+.form-control[readonly] {
+  color: var(--text);
+  background-color: var(--card-bg);
+}
+
+.form-control:focus {
+  border-color: var(--accent);
+}
+
+.form-control::placeholder {
+  color: var(--muted);
+  opacity: .82;
+}
+
+.form-control:-webkit-autofill,
+.form-control:-webkit-autofill:hover,
+.form-control:-webkit-autofill:focus,
+.form-control:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--card-bg) inset;
+  box-shadow: 0 0 0 1000px var(--card-bg) inset;
+  transition: background-color 9999s ease-out 0s;
+}
+
+select.form-control {
+  color: var(--text);
+  background-color: var(--card-bg);
+}
+
+select.form-control:focus {
+  color: var(--text);
+  background-color: var(--card-bg);
+}
 .form-text,
 .small.text-muted { color: var(--muted) !important; }
 .form-control:focus-visible,
@@ -640,7 +676,7 @@ button[type="submit"]:active, .btn:active { transform: translateY(1px); }
   margin-bottom: 16px;
 }
 
-.directory-title-group { text-align: left; }
+.directory-title-group { text-align: center; }
 .directory-title-group h2 { margin: 0; }
 .directory-title-group p {
   margin: 4px 0 0;
@@ -675,7 +711,7 @@ button[type="submit"]:active, .btn:active { transform: translateY(1px); }
 }
 .directory-filters select { width: min(220px, 50%); }
 #client-list-count { margin: 0 0 10px; }
-.directory-section .table { border: 1px solid var(--border); }
+
 .directory-section .table thead th:last-child,
 .directory-section .table tbody td:last-child { text-align: right; }
 .client-name-cell { min-width: 190px; font-weight: 650; }
@@ -1114,4 +1150,12 @@ a:focus-visible {
 
 .client-balance.has-debt {
   color: var(--accent-strong) !important;
+}
+
+.directory-section .table thead th {
+  text-align: center;
+}
+
+.directory-section .client-balance {
+  color: var(--danger) !important;
 }

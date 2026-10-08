@@ -120,7 +120,7 @@
         </div>
       </div>
       <button type="submit" class="btn btn-primary btn-lg btn-block">
-        Agregar Cliente
+        Agregar cliente
       </button>
       <button type="button" id="cancel-client-edit" class="btn btn-secondary btn-block d-none">
         Cancelar edición
@@ -142,23 +142,23 @@
           aria-autocomplete="list"
           aria-controls="client-search-results"
           aria-expanded="false"
-          aria-describedby="client-search-hint client-search-status"
+          aria-describedby="client-search-status"
           role="combobox"
           autocomplete="off"
         />
         <ul id="client-search-results" class="client-search-results" role="listbox" aria-label="Clientes encontrados" hidden></ul>
       </div>
-      <small id="client-search-hint" class="form-text text-muted">Buscá el cliente.</small>
+
       <span id="client-search-status" class="sr-only" aria-live="polite"></span>
 
       <div class="form-group">
-        <label for="select-client">Seleccionar Cliente</label>
-        <select id="select-client" class="form-control form-control-lg" required aria-describedby="selected-client-hint"></select>
-        <small id="selected-client-hint" class="form-text text-muted">La transacción se registrará para el cliente seleccionado.</small>
+        <label for="select-client">Seleccionar cliente</label>
+        <select id="select-client" class="form-control form-control-lg" required></select>
+
       </div>
 
       <div class="form-group">
-        <label for="transaction-type">Tipo de Transacción</label>
+        <label for="transaction-type">Tipo de transacción</label>
         <select id="transaction-type" class="form-control form-control-lg">
           <option value="purchase">Compra</option>
           <option value="payment">Pago</option>
@@ -171,13 +171,13 @@
           type="text" inputmode="decimal"
           id="amount"
           class="form-control form-control-lg"
-          placeholder="Monto (ej: 1.234,56)" aria-describedby="amount-hint" required
+          placeholder="Monto (ej: 1.234,56)" required
         />
-        <small id="amount-hint" class="form-text text-muted"></small>
+
       </div>
 
       <div class="form-group">
-        <label for="payment-method">Método de Pago</label>
+        <label for="payment-method">Método de pago</label>
         <select id="payment-method" class="form-control form-control-lg">
           <option value="efectivo">Efectivo</option>
           <option value="tarjeta">Tarjeta</option>
@@ -186,7 +186,7 @@
       </div>
 
       <button type="submit" class="btn btn-primary btn-lg btn-block">
-        Registrar Transacción
+        Registrar transacción
       </button>
     </form>
     </div>
@@ -234,8 +234,8 @@
     <section class="directory-section" aria-labelledby="directory-title">
       <div class="directory-heading">
         <div class="directory-title-group">
-          <h2 id="directory-title">Clientes y cuentas</h2>
-          <p>Buscá clientes, consultá su actividad y revisá sus saldos.</p>
+          <h2 id="directory-title">Estado de cuentas</h2>
+
         </div>
         <div class="directory-search">
           <label for="debt-search">Buscar cliente</label>
@@ -261,7 +261,7 @@
       <p id="client-list-count" class="small text-muted" aria-live="polite"></p>
       <div class="table-responsive">
         <table id="debt-list" class="table table-bordered table-striped">
-          <caption class="sr-only">Clientes y cuentas.</caption>
+          <caption class="sr-only">Estado de cuentas.</caption>
           <thead class="thead-dark">
             <tr>
               <th scope="col">Cliente</th>
