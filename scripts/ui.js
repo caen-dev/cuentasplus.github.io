@@ -21,9 +21,7 @@ export function updateClientSelect() {
 export function updateClientDebtList() {
   const $tbody = $('#debt-list tbody').empty();
   const search = String($('#debt-search').val() || '').trim().toLocaleLowerCase('es-AR');
-  const filter = $('#client-list-filter').val() || 'all';
-  const sort = $('#client-list-sort').val() || 'activity';
-  const orderedClients = sortClients(filterClients(Object.values(clients), search, filter), sort);
+  const orderedClients = sortClients(filterClients(Object.values(clients), search), 'activity');
   $('#client-list-count').text(
     `Mostrando ${orderedClients.length} de ${Object.keys(clients).length} cliente(s).`
   );
@@ -278,9 +276,6 @@ export function initTableInteractions() {
   $('#debt-search').on('input', function () {
     updateClientDebtList();
   });
-  $('#client-list-filter').on('change', updateClientDebtList);
-  $('#client-list-sort').on('change', updateClientDebtList);
-
   const $clientSearch = $('#client-filter');
   let activeOption = -1;
   $clientSearch.on('input', function () {
